@@ -1,19 +1,18 @@
 FROM tomcat:7-jre8-alpine
 
-# Limpa a pasta padrão do Tomcat para liberar memória
+# Limpa absolutamente tudo da pasta webapps
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Instala o utilitário curl dentro do contêiner
-RUN apk add --no-cache curl
+# Instala o utilitário curl e unzip
+RUN apk add --no-cache curl unzip
 
 # 1. Baixa o Driver do PostgreSQL direto para as bibliotecas do Tomcat
 RUN wget -O /usr/local/tomcat/lib/postgresql-42.2.24.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.24/postgresql-42.2.24.jar
 
-# 2. Copia o script que criamos e manda a própria Render baixar o Biblivre direto da fonte de lançamentos estável
-COPY baixar.sh .
-RUN chmod +x baixar.sh && ./baixar.sh
-
-# 3. Move o arquivo baixado para o lugar definitivo
-RUN mv biblivre5.war /usr/local/tomcat/webapps/ROOT.war && rm baixar.sh
+# 2. Cria a pasta ROOT, baixa o Biblivre e descompacta ele direto lá dentro
+RUN mkdir -p /usr/local/tomcat/webapps/ROOT && \
+    curl -L -o /tmp/biblivre5.war https://github.com/cleydyr/biblivre5-docker/releases/download/v5.0.4/biblivre5.war && \
+    unzip /tmp/biblivre5.war -d /usr/local/tomcat/webapps/ROOT/ && \
+    rm -f /tmp/biblivre5.war
 
 EXPOSE 8080
