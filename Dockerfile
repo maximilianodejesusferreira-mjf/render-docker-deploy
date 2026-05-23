@@ -1,7 +1,12 @@
 FROM tomcat:7-jre8-alpine
-# Remove a página padrão do Tomcat
+
+# Limpa a pasta
 RUN rm -rf /usr/local/tomcat/webapps/*
-# Copia seu arquivo para a raiz do Tomcat, fazendo com que ele responda em "/"
+
+# Copia o arquivo
 COPY biblivre5.war /usr/local/tomcat/webapps/ROOT.war
-# Expõe a porta que a Render usa
+
+# Remove a configuração AJP que está causando o erro de "Invalid message"
+RUN sed -i '/Connector port="8009"/d' /usr/local/tomcat/conf/server.xml
+
 EXPOSE 8080
