@@ -1,1 +1,1 @@
-FROM alpine:latest
+FROM leandromartins/biblivre5:latest
