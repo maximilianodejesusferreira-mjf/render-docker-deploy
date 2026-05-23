@@ -1,13 +1,28 @@
-# Usa o servidor espelho oficial da Amazon (ECR) para o Tomcat, burlado o bloqueio do Docker Hub
-FROM public.ecr.aws/docker/library/tomcat:7-jre8-alpine
+# Usa uma imagem oficial do ecossistema corporativo (Red Hat/CentOS) livre de bloqueios de rate limit
+FROM quay.io/centos/centos:stream9
 
-# Limpa os aplicativos padrão do Tomcat
-RUN rm -rf /usr/local/tomcat/webapps/*
+# Instala o Java e utilitários necessários de forma nativa
+RUN dnf install -y java-1.8.0-openjdk wget && dnf clean all
 
-# 1. Baixa o Driver do PostgreSQL para a pasta de bibliotecas do Tomcat
-RUN wget -O /usr/local/tomcat/lib/postgresql-42.2.24.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.24/postgresql-42.2.24.jar
+# Cria as pastas do servidor manual para não depender de imagens prontas travadas
+WORKDIR /opt
 
-# 2. Baixa o Biblivre 5 usando o gateway alternativo direto
-ADD https://github.com/cleydyr/biblivre5-docker/raw/0cc68a52932c57f9cbcae682d33b5c6b659a8c48/tomcat/biblivre5.war /usr/local/tomcat/webapps/ROOT.war
+# Baixa uma versão estável e limpa do Tomcat de um espelho público alternativo
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109.tar.gz && \
+    tar -xf apache-tomcat-7.0.109.tar.gz && \
+    mv apache-tomcat-7.0.109 tomcat && \
+    rm -f apache-tomcat-7.0.109.tar.gz
+
+# Limpa os apps padrões para economizar a memória do plano gratuito da Render
+RUN rm -rf /opt/tomcat/webapps/*
+
+# 1. Baixa o Driver do PostgreSQL para a pasta de bibliotecas do Tomcat instalado
+RUN wget -O /opt/tomcat/lib/postgresql-42.2.24.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.24/postgresql-42.2.24.jar
+
+# 2. Injeta o arquivo estável do Biblivre 5 renomeando para ROOT.war
+ADD https://github.com/cleydyr/biblivre5-docker/raw/0cc68a52932c57f9cbcae682d33b5c6b659a8c48/tomcat/biblivre5.war /opt/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
+
+# Comando para iniciar o Tomcat manualmente em primeiro plano
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
