@@ -1,10 +1,12 @@
 FROM tomcat:7-jre8-alpine
 
-# Remove o que vem por padrão
+# Removemos qualquer coisa prévia para garantir um ambiente limpo
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copia o arquivo que está aí dentro do seu GitHub
-COPY biblivre5.war /usr/local/tomcat/webapps/ROOT.war
+# Copiamos o seu arquivo para a pasta webapps
+COPY biblivre5.war /usr/local/tomcat/webapps/biblivre.war
 
-# Abre a porta
+# Adicionamos o driver do Postgres, essencial para o Biblivre se conectar ao banco
+RUN wget -O /usr/local/tomcat/lib/postgresql-42.2.24.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.24/postgresql-42.2.24.jar
+
 EXPOSE 8080
